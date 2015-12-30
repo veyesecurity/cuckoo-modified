@@ -10,3 +10,4 @@ nose
 jsbeautifier
 pygal
 dnspython
+boto
