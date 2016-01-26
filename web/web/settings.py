@@ -5,10 +5,14 @@
 import sys
 import os
 
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 # Cuckoo path.
 CUCKOO_PATH = os.path.join(os.getcwd(), "..")
 sys.path.append(CUCKOO_PATH)
-
 from lib.cuckoo.common.config import Config
 
 cfg = Config("reporting")
@@ -19,6 +23,10 @@ if not cfg.mongodb.get("enabled") and not cfg.elasticsearchdb.get("enabled"):
 
 if cfg.mongodb.get("enabled") and cfg.elasticsearchdb.get("enabled"):
     raise Exception("Both database backend reporting modules are enabled. Please only enabled ElasticSearch or MongoDB.")
+
+aux_cfg =  Config("auxiliary")
+vtdl_cfg = aux_cfg.virustotaldl
+tor_cfg = aux_cfg.tor
 
 # Get connection options from reporting.conf.
 MONGO_HOST = cfg.mongodb.get("host", "127.0.0.1")
@@ -42,6 +50,19 @@ VTDL_ENABLED = vtdl_cfg.get("enabled",False)
 VTDL_PRIV_KEY = vtdl_cfg.get("dlprivkey",None)
 VTDL_INTEL_KEY = vtdl_cfg.get("dlintelkey",None)
 VTDL_PATH = vtdl_cfg.get("dlpath",None)
+
+TEMP_PATH = Config().cuckoo.get("tmppath", "/tmp")
+
+ipaddy_re = re.compile(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
+
+if GATEWAYS:
+    GATEWAYS_IP_MAP = {}
+    for e in GATEWAYS:
+        if "," in e:
+            continue
+        elif ipaddy_re.match(GATEWAYS[e]):
+            GATEWAYS_IP_MAP[GATEWAYS[e]]=e  
+ 
 
 # Enabled/Disable Zer0m0n tickbox on the submission page
 OPT_ZER0M0N = False
